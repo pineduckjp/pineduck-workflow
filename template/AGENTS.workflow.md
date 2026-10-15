@@ -2,6 +2,7 @@
 ## Development Workflow (Issue + PR)
 
 All work follows `CONTRIBUTING.md`: plan in a GitHub Issue, implement on a branch, merge via PR. Follow these steps every time unless the user explicitly says otherwise.
+Source and human-facing step table: https://github.com/pineduckjp/pineduck-workflow (tell the user which step you are on).
 
 1. **Plan in an Issue first** (`feat` / `fix` only)
    - Before writing code, check for an existing Issue: `gh issue list`

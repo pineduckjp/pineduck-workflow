@@ -1,65 +1,149 @@
-# github-workflow-template
+# pineduck-workflow
 
-GitHub の **Issue で計画を立て、PR で開発を進める** ワークフローを、どのプロジェクトにも導入できるテンプレート集です。
-[pineduckjp/pineduck](https://github.com/pineduckjp/pineduck) の `.github` テンプレートと `CONTRIBUTING.md` を元に、特定の技術スタックに依存しない形にしています。
+GitHub の **Issue で計画を立て、PR で開発を進める** ための、PineDuck 共通の開発ワークフローです。
+どのプロジェクトでも、このリポジトリを AI (Claude Code など) に読み込ませれば、同じ手順で開発できます。
 
-## 含まれるもの
+---
+
+## 🔁 毎回おこなうワークフロー
+
+機能追加・バグ修正のたびに、この順番で進めます。**人** と **AI** が交互に進めるイメージです。
+
+| # | 誰が | やること | 成果物 |
+| --- | --- | --- | --- |
+| 1 | 👤 人 | つくりたいもの・直したいことを AI に指示する | 指示文 |
+| 2 | 🤖 AI | Issue 案を作成する (テンプレートに沿って、実装方針・完了条件・タスクを書く) | Issue 案 (チャット上) |
+| 3 | 👤 人 | Issue 案を確認し、修正を指示する or OK を出す | 承認 |
+| 4 | 🤖 AI | GitHub に Issue を作成する | Issue `#N` |
+| 5 | 🤖 AI | `develop` から作業ブランチを作成し、実装・コミットする | ブランチ・コミット |
+| 6 | 🤖 AI | テスト・ビルドを確認し、`develop` 向けの PR を作成する (`Issue #N`) | PR |
+| 7 | 👤 人 | PR をレビューする。修正があれば AI に指示 → 5 に戻る | レビュー |
+| 8 | 👤 人 | PR を `develop` にマージする | — |
+| 9 | 👤 人 | プレビュー環境で動作確認する | — |
+| 10 | 👤 人 | 「本番リリースして」と AI に指示する | 指示文 |
+| 11 | 🤖 AI | `develop` → `main` の PR を作成する (`Closes #N`) | リリース PR |
+| 12 | 👤 人 | リリース PR をマージし、本番環境で動作確認する | Issue が自動でクローズ 🎉 |
+
+> **ポイント**
+> - AI は勝手に **マージ・Issue のクローズ・`main` への push をしません**。それは人の仕事です。
+> - `docs` / `refactor` / `config` など機能に関わらない変更は、Issue を作らずステップ 5 から始めて OK です。
+> - 迷ったら「今どのステップ？」と AI に聞けば、この表のどこにいるか答えてくれます。
+
+### 👤 人が AI に送る指示 (コピペ用)
+
+**ステップ 1: 作りたいものを指示する**
 
 ```text
-template/
-├── .github/
-│   ├── ISSUE_TEMPLATE/
-│   │   ├── feat.md          # 機能追加 (概要 / 背景 / 実装方針 / 完了条件 / タスク)
-│   │   ├── fix.md           # バグ修正 (再現手順 / 原因 / 修正方針 / タスク)
-│   │   └── config.yml
-│   └── pull_request_template.md
-├── CONTRIBUTING.md          # 人間向けの開発フロー
-└── AGENTS.workflow.md       # AI エージェント (Claude Code など) 向けの規約。AGENTS.md / CLAUDE.md に追記される
-install.sh                   # 対象プロジェクトへ導入するスクリプト
+https://github.com/pineduckjp/pineduck-workflow のワークフローに従って進めてください。
+作りたいもの: 〇〇〇〇
 ```
 
-## ワークフロー概要
+**ステップ 3: Issue 案を承認する**
 
 ```text
-Issue 作成 (計画) ─▶ 作業ブランチ ─▶ PR → develop (Issue #N) ─▶ プレビュー確認 ─▶ PR → main (Closes #N) ─▶ 本番確認
+この内容で Issue を作成して、実装まで進めてください。
 ```
 
-- `feat` / `fix` は必ず Issue を作成し、Issue の「実装方針」「完了条件」「タスク」を計画として使います。
-- ブランチ名: `<type>/issue-<issue-id>-<milestone-name>`
-- コミット: Conventional Commits + 本文に `Issue #<issue-id>`
-- 詳細は [template/CONTRIBUTING.md](./template/CONTRIBUTING.md) を参照してください。
+**ステップ 7: PR に修正を依頼する**
 
-## 使い方
+```text
+PR #N を次のように修正してください: 〇〇〇〇
+```
+
+**ステップ 10: 本番リリースを指示する**
+
+```text
+Issue #N を本番リリースしてください。
+```
+
+---
+
+## 🆕 新しいプロジェクトに導入する (最初の 1 回だけ)
+
+### AI に頼む場合
+
+```text
+https://github.com/pineduckjp/pineduck-workflow をこのプロジェクトに導入してください。
+```
+
+### 自分でやる場合
 
 ```bash
-# 対象プロジェクトに導入 (既存ファイルはスキップ)
-./install.sh ~/apps/my-project
+# 1. このリポジトリを取得 (初回のみ)
+git clone https://github.com/pineduckjp/pineduck-workflow.git ~/apps/pineduck-workflow
 
-# feat / fix ラベルも作成する (gh CLI のログインが必要)
-./install.sh ~/apps/my-project --labels
+# 2. 対象プロジェクトに導入 (--labels で feat / fix ラベルも作成)
+~/apps/pineduck-workflow/install.sh ~/apps/my-project --labels
 
-# 既存のテンプレートを上書きする
-./install.sh ~/apps/my-project --force
+# 3. develop ブランチを作成
+cd ~/apps/my-project
+git switch -c develop && git push -u origin develop
+
+# 4. Milestone (機能カテゴリー) を作成
+gh api repos/{owner}/{repo}/milestones -f title="form-mail"
 ```
 
-`AGENTS.md` / `CLAUDE.md` にはワークフロー規約が追記されます (再実行しても重複しません)。どちらも無い場合は `AGENTS.md` を新規作成します。
+`install.sh` のオプション:
 
-## 導入後の設定
+| オプション | 説明 |
+| --- | --- |
+| (なし) | テンプレートをコピー。既存ファイルはスキップ |
+| `--labels` | `gh` で `feat` / `fix` ラベルを作成 |
+| `--force` | 既存のテンプレートファイルを上書き |
 
-1. `develop` ブランチを作成して push する
-   ```bash
-   git switch -c develop && git push -u origin develop
-   ```
-2. Milestone (機能カテゴリー) を作成する
-   ```bash
-   gh api repos/{owner}/{repo}/milestones -f title="form-mail"
-   ```
-3. ラベル `feat` / `fix` を作成する (`--labels` を使った場合は不要)
-4. 必要に応じて、プロジェクト固有の内容を調整する
-   - `fix.md` の「環境情報」
-   - `pull_request_template.md` のチェックリスト (例: `npm run build` などの具体的なコマンド)
-   - CI / デプロイの workflow (`develop` → プレビュー、`main` → 本番) はプロジェクトごとに作成してください
+導入すると、プロジェクトの `AGENTS.md` / `CLAUDE.md` にワークフロー規約が追記されます。
+以降は、そのプロジェクトで AI に指示するだけで、このワークフローに沿って動きます。
 
-## develop ブランチを使わないプロジェクトの場合
+導入後、必要に応じてプロジェクト固有の内容を調整してください。
 
-`main` のみで運用する場合は、PR テンプレートと `CONTRIBUTING.md` の develop に関する記述を削除し、PR 本文に `Closes #<issue-id>` を記載してください。
+- `.github/ISSUE_TEMPLATE/fix.md` の「環境情報」
+- `.github/pull_request_template.md` のチェックリスト (例: `npm run build` などの具体的なコマンド)
+- CI / デプロイの workflow (`develop` → プレビュー、`main` → 本番) はプロジェクトごとに作成
+
+---
+
+## 📚 ルール早見表
+
+| 項目 | ルール | 例 |
+| --- | --- | --- |
+| Issue が必要な変更 | `feat` (機能追加) / `fix` (バグ修正) | — |
+| ブランチ名 | `<type>/issue-<番号>-<milestone>` | `feat/issue-3-form-mail` |
+| ブランチ名 (Issue なし) | `<type>/<短い説明>` | `docs/update-readme` |
+| コミット | Conventional Commits + 本文に `Issue #<番号>` | `feat: メール通知を追加` |
+| `develop` 向け PR | 本文に `Issue #<番号>` (Issue は開いたまま) | `Issue #3` |
+| `main` 向け PR | 本文に `Closes #<番号>` (マージで自動クローズ) | `Closes #3` |
+
+`<type>` の一覧: `feat` / `fix` / `docs` / `style` / `refactor` / `config` / `test` / `ci`
+
+詳しくは [template/CONTRIBUTING.md](./template/CONTRIBUTING.md) を参照してください。
+
+---
+
+## 🤖 AI エージェントへ
+
+このリポジトリの URL を渡されたら、次のように動いてください。
+
+1. 作業中のプロジェクトにワークフローが未導入 (`.github/ISSUE_TEMPLATE/feat.md` が無い、または `AGENTS.md` / `CLAUDE.md` に `Development Workflow (Issue + PR)` が無い) なら、導入を提案する。
+   導入は、このリポジトリを clone して `install.sh <project-dir> --labels` を実行し、「導入後の設定」を行う。
+2. 開発の依頼であれば、[template/AGENTS.workflow.md](./template/AGENTS.workflow.md) の規約と、上の「毎回おこなうワークフロー」の表に従う。
+   今どのステップにいるかを、ユーザーに伝えながら進める。
+
+---
+
+## 📁 このリポジトリの中身
+
+```text
+template/                       ← 各プロジェクトにコピーされるもの
+├── .github/
+│   ├── ISSUE_TEMPLATE/
+│   │   ├── feat.md             # 機能追加の Issue テンプレート
+│   │   ├── fix.md              # バグ修正の Issue テンプレート
+│   │   └── config.yml
+│   └── pull_request_template.md
+├── CONTRIBUTING.md             # 人向けの詳しい開発フロー
+└── AGENTS.workflow.md          # AI 向けの規約 (AGENTS.md / CLAUDE.md に追記される)
+install.sh                      # 導入スクリプト
+```
+
+ワークフローを変更したいときは、このリポジトリを更新し、各プロジェクトで `install.sh --force` を実行してください。
+(`AGENTS.md` / `CLAUDE.md` への追記部分は自動で置き換わらないため、手動で更新してください)
