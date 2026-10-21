@@ -46,7 +46,6 @@ copy_file .github/pull_request_template.md || true
 copy_file CONTRIBUTING.md || true
 
 # シークレットファイル保護 (Claude Code の権限設定とフック)
-copy_file .claude/hooks/protect-secrets.py || true
 if ! copy_file .claude/settings.json; then
   echo "         → .claude/settings.json の permissions.deny と hooks.PreToolUse を手動でマージしてください"
   echo "           (参照: $TEMPLATE_DIR/.claude/settings.json)"

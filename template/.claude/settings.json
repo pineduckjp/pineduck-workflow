@@ -30,7 +30,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/protect-secrets.py",
+            "command": "python3 -c 'import json,re,sys\nd=json.load(sys.stdin)\nt=d.get(\"tool_name\",\"\")\ni=d.get(\"tool_input\") or {}\nS=re.compile(r\"^\\.(dev\\.vars|env)(\\.[\\w.-]+)?$\")\nC=re.compile(r\"(?:^|[\\s/\\x27\\\"=<>:(])(\\.(?:dev\\.vars|env)(?:\\.[\\w.-]+)?)(?=$|[\\s\\x27\\\";|&)<>*?\\[])\")\ndef sec(v):\n    b=v.rstrip(\"/\").rsplit(\"/\",1)[-1]\n    return (bool(S.match(b)) and not b.endswith(\".example\")) or bool(re.search(r\"(^|/)\\.(dev\\.vars|env)\\*?$\",v))\nif t==\"Bash\":\n    hit=next((m.group(1) for m in C.finditer(i.get(\"command\",\"\")) if not m.group(1).endswith(\".example\")),None)\nelse:\n    hit=next((v for k in (\"file_path\",\"notebook_path\",\"path\",\"pattern\",\"glob\") for v in [i.get(k)] if isinstance(v,str) and sec(v)),None)\nif hit:\n    print(\"Blocked: シークレットファイル (\"+hit+\") へのアクセスは禁止されています。読む・作成・編集・コピーはせず、ユーザーが自分で行う手順を案内してください。\",file=sys.stderr)\n    sys.exit(2)\n'",
             "onFailure": "block",
             "statusMessage": "シークレットファイルへのアクセスを確認中"
           }

@@ -134,7 +134,9 @@ API キーなどのシークレットは **人だけが扱います**。AI は�
 導入すると `.claude/settings.json` に次の設定が入り、Claude Code からのアクセスがブロックされます。
 
 - `permissions.deny`: 代表的なシークレットファイル名の Read / Edit を禁止
-- `hooks.PreToolUse` (`.claude/hooks/protect-secrets.py`): `.dev.vars*` / `.env*` (`*.example` を除く) を対象とする Read / Edit / Write / Grep / Glob / Bash をブロック
+- `hooks.PreToolUse`: `.dev.vars*` / `.env*` (`*.example` を除く) を対象とする Read / Edit / Write / Grep / Glob / Bash をブロック。判定処理は `settings.json` の中に直接書いてあるため、ブランチを切り替えても止まりません
+
+**おすすめ**: 同じ設定をユーザー設定 (`~/.claude/settings.json`) にも入れておくと、`.claude/settings.json` がまだ無いブランチやプロジェクトでも保護が効きます。AI に「シークレット保護をユーザー設定にも入れて」と頼めば追加してくれます。
 
 > フックは「うっかり」を防ぐガードレールです。完全な防御ではないので、本物のキーをコードやコミットに含めないよう、人も注意してください。
 
@@ -162,8 +164,7 @@ template/                       ← 各プロジェクトにコピーされる�
 │   │   └── config.yml
 │   └── pull_request_template.md
 ├── .claude/
-│   ├── settings.json           # シークレットファイルへのアクセス禁止 (権限設定 + フック)
-│   └── hooks/protect-secrets.py
+│   └── settings.json           # シークレットファイルへのアクセス禁止 (権限設定 + フック)
 ├── CONTRIBUTING.md             # 人向けの詳しい開発フロー
 └── AGENTS.workflow.md          # AI 向けの規約 (AGENTS.md / CLAUDE.md に追記される)
 install.sh                      # 導入スクリプト
