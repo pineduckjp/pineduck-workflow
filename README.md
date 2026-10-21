@@ -14,9 +14,9 @@ GitHub の **Issue で計画を立て、PR で開発を進める** ための、P
 | 1 | 👤 人 | つくりたいもの・直したいことを AI に指示する | 指示文 |
 | 2 | 🤖 AI | Issue 案を作成する (テンプレートに沿って、実装方針・完了条件・タスクを書く) | Issue 案 (チャット上) |
 | 3 | 👤 人 | Issue 案を確認し、修正を指示する or OK を出す | 承認 |
-| 4 | 🤖 AI | GitHub に Issue を作成する | Issue `#N` |
+| 4 | 🤖 AI | GitHub に Issue を作成する (担当者・ラベル・Milestone を設定) | Issue `#N` |
 | 5 | 🤖 AI | `develop` から作業ブランチを作成し、実装・コミットする | ブランチ・コミット |
-| 6 | 🤖 AI | テスト・ビルドを確認し、`develop` 向けの PR を作成する (`Issue #N`) | PR |
+| 6 | 🤖 AI | テスト・ビルドを確認し、`develop` 向けの PR を作成する (`Issue #N`、担当者・ラベル・Milestone を設定) | PR |
 | 7 | 👤 人 | PR をレビューする。修正があれば AI に指示 → 5 に戻る | レビュー |
 | 8 | 👤 人 | PR を `develop` にマージする | — |
 | 9 | 👤 人 | プレビュー環境で動作確認する | — |
@@ -26,6 +26,7 @@ GitHub の **Issue で計画を立て、PR で開発を進める** ための、P
 
 > **ポイント**
 > - AI は勝手に **マージ・Issue のクローズ・`main` への push をしません**。それは人の仕事です。
+> - AI は **シークレットファイル (`.dev.vars` / `.env` など) を見ない・触りません**。API キーなどの設定は、AI が手順を案内し、人が行います (→ [🔐 シークレットの扱い](#-シークレットの扱い))。
 > - `docs` / `refactor` / `config` など機能に関わらない変更は、Issue を作らずステップ 5 から始めて OK です。
 > - 迷ったら「今どのステップ？」と AI に聞けば、この表のどこにいるか答えてくれます。
 
@@ -88,7 +89,7 @@ gh api repos/{owner}/{repo}/milestones -f title="form-mail"
 | オプション | 説明 |
 | --- | --- |
 | (なし) | テンプレートをコピー。既存ファイルはスキップ |
-| `--labels` | `gh` で `feat` / `fix` ラベルを作成 |
+| `--labels` | `gh` で type ラベル (`feat` / `fix` / `docs` / `style` / `refactor` / `config` / `test` / `ci`) を作成 |
 | `--force` | 既存のテンプレートファイルを上書き |
 
 導入すると、プロジェクトの `AGENTS.md` / `CLAUDE.md` にワークフロー規約が追記されます。
@@ -111,11 +112,31 @@ gh api repos/{owner}/{repo}/milestones -f title="form-mail"
 | ブランチ名 (Issue なし) | `<type>/<短い説明>` | `docs/update-readme` |
 | コミット | Conventional Commits + 本文に `Issue #<番号>` | `feat: メール通知を追加` |
 | `develop` 向け PR | 本文に `Issue #<番号>` (Issue は開いたまま) | `Issue #3` |
+| Issue / PR の属性 | 担当者 (自分)・ラベル (`<type>`)・Milestone を必ず設定 | `feat` / `form-mail` |
 | `main` 向け PR | 本文に `Closes #<番号>` (マージで自動クローズ) | `Closes #3` |
 
 `<type>` の一覧: `feat` / `fix` / `docs` / `style` / `refactor` / `config` / `test` / `ci`
 
 詳しくは [template/CONTRIBUTING.md](./template/CONTRIBUTING.md) を参照してください。
+
+---
+
+## 🔐 シークレットの扱い
+
+API キーなどのシークレットは **人だけが扱います**。AI は見ない・作らない・編集しません。
+
+| | 誰が | どうやって |
+| --- | --- | --- |
+| ローカル (`.dev.vars` / `.env`) | 👤 人 | `.dev.vars.example` などをコピーして、自分で値を書く |
+| 本番 (`wrangler secret put` など) | 👤 人 | AI が案内するコマンドを自分のターミナルで実行する |
+| サンプル (`*.example`) | 🤖 AI | 変数名とダミー値だけを書いて管理する |
+
+導入すると `.claude/settings.json` に次の設定が入り、Claude Code からのアクセスがブロックされます。
+
+- `permissions.deny`: 代表的なシークレットファイル名の Read / Edit を禁止
+- `hooks.PreToolUse` (`.claude/hooks/protect-secrets.py`): `.dev.vars*` / `.env*` (`*.example` を除く) を対象とする Read / Edit / Write / Grep / Glob / Bash をブロック
+
+> フックは「うっかり」を防ぐガードレールです。完全な防御ではないので、本物のキーをコードやコミットに含めないよう、人も注意してください。
 
 ---
 
@@ -140,6 +161,9 @@ template/                       ← 各プロジェクトにコピーされる�
 │   │   ├── fix.md              # バグ修正の Issue テンプレート
 │   │   └── config.yml
 │   └── pull_request_template.md
+├── .claude/
+│   ├── settings.json           # シークレットファイルへのアクセス禁止 (権限設定 + フック)
+│   └── hooks/protect-secrets.py
 ├── CONTRIBUTING.md             # 人向けの詳しい開発フロー
 └── AGENTS.workflow.md          # AI 向けの規約 (AGENTS.md / CLAUDE.md に追記される)
 install.sh                      # 導入スクリプト

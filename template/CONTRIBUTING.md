@@ -39,7 +39,7 @@ Issue 作成時に、テンプレートを使用してください。Issue の�
 - **機能追加**: [feat.md](./.github/ISSUE_TEMPLATE/feat.md)
 - **バグ修正**: [fix.md](./.github/ISSUE_TEMPLATE/fix.md)
 
-Issue には Milestone を設定してください。
+Issue には **担当者・ラベル (`<type>`)・Milestone** を設定してください。
 
 ### 2. 作業開始
 
@@ -89,6 +89,8 @@ PR 作成時に、テンプレートを使用してください。
 
 - [PR テンプレート](./.github/pull_request_template.md)
 
+PR にも **担当者・ラベル (`<type>`)・Milestone (Issue と同じもの)** を設定してください。
+
 完了した Issue のタスクにチェックを入れてください。
 
 ### 4. プレビュー確認
@@ -111,3 +113,12 @@ PR 作成時に、テンプレートを使用してください。
 2. Issue 自動クローズ
 
 🎉 完了
+
+## シークレットの扱い
+
+API キーなどのシークレットは **人だけが扱います**。AI (Claude Code など) には見せず、触らせません。
+
+- ローカル: `.dev.vars.example` (または `.env.example`) をコピーして、自分で値を書く。ファイルは git 管理外
+- 本番: `wrangler secret put <NAME>` などを自分のターミナルで実行する
+- `*.example` にはダミー値だけを書く
+- `.claude/settings.json` のフックで、Claude Code からシークレットファイルへのアクセスをブロックしている

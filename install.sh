@@ -3,7 +3,7 @@
 #
 # 使い方: ./install.sh <target-dir> [--force] [--labels]
 #   --force   既存のテンプレートファイルを上書きする
-#   --labels  gh CLI で feat / fix ラベルを対象リポジトリに作成する
+#   --labels  gh CLI で type ラベル (feat / fix / docs ...) を対象リポジトリに作成する
 set -euo pipefail
 
 TEMPLATE_DIR="$(cd "$(dirname "$0")/template" && pwd)"
@@ -32,18 +32,25 @@ copy_file() {
   local dest="$target/$rel"
   if [[ -e "$dest" && "$force" != true ]]; then
     echo "skip     $rel (既に存在します。上書きは --force)"
-    return
+    return 1
   fi
   mkdir -p "$(dirname "$dest")"
-  cp "$TEMPLATE_DIR/$rel" "$dest"
+  cp -p "$TEMPLATE_DIR/$rel" "$dest"
   echo "copy     $rel"
 }
 
-copy_file .github/ISSUE_TEMPLATE/feat.md
-copy_file .github/ISSUE_TEMPLATE/fix.md
-copy_file .github/ISSUE_TEMPLATE/config.yml
-copy_file .github/pull_request_template.md
-copy_file CONTRIBUTING.md
+copy_file .github/ISSUE_TEMPLATE/feat.md || true
+copy_file .github/ISSUE_TEMPLATE/fix.md || true
+copy_file .github/ISSUE_TEMPLATE/config.yml || true
+copy_file .github/pull_request_template.md || true
+copy_file CONTRIBUTING.md || true
+
+# シークレットファイル保護 (Claude Code の権限設定とフック)
+copy_file .claude/hooks/protect-secrets.py || true
+if ! copy_file .claude/settings.json; then
+  echo "         → .claude/settings.json の permissions.deny と hooks.PreToolUse を手動でマージしてください"
+  echo "           (参照: $TEMPLATE_DIR/.claude/settings.json)"
+fi
 
 # AI エージェント向けのワークフロー規約を AGENTS.md / CLAUDE.md に追記する
 append_agents() {
@@ -73,8 +80,14 @@ if [[ "$labels" == true ]]; then
     cd "$target"
     gh label create feat --color a2eeef --description "機能追加" --force
     gh label create fix --color d73a4a --description "バグ修正" --force
+    gh label create docs --color 0075ca --description "ドキュメント" --force
+    gh label create style --color f9d0c4 --description "見た目・フォーマット" --force
+    gh label create refactor --color d4c5f9 --description "リファクタリング" --force
+    gh label create config --color c5def5 --description "設定ファイル" --force
+    gh label create test --color bfd4f2 --description "テスト" --force
+    gh label create ci --color 0e8a16 --description "CI/CD" --force
   )
-  echo "label    feat, fix"
+  echo "label    feat, fix, docs, style, refactor, config, test, ci"
 fi
 
 echo
