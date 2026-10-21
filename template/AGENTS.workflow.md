@@ -32,3 +32,4 @@ Source and human-facing step table: https://github.com/pineduckjp/pineduck-workf
    - Do not read, create, edit, copy, `cat`, `grep`, or `ls` them, and never print secret values. A hook in `.claude/settings.json` blocks this.
    - When a secret needs to be set (locally or in production, e.g. `wrangler secret put`), give the user step-by-step instructions and let them do it.
    - Keep `*.example` files up to date with variable names and dummy values only.
+   - The hook also blocks shell commands whose text contains those file names. If a commit message or PR body must mention them, write the text to a file first (Write tool) and pass it with `git commit -F <file>` / `--body-file <file>`.
