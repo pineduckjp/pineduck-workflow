@@ -27,6 +27,8 @@ Source and human-facing step table: https://github.com/pineduckjp/pineduck-workf
    - Always set **assignee (`@me`), label (= `<type>`), and milestone** (same as the Issue; omit `--milestone` only when there is no Issue) on both Issues and PRs. Verify with `gh pr view <n> --json assignees,labels,milestone`.
    - Check off completed tasks in the Issue: edit the body with `gh issue edit <id> --body-file <file>`.
 5. **Release PR `develop` → `main`** only when the user asks. Body contains `Closes #<id>`. Set assignee / label / milestone the same way.
+   - Merge methods (the user merges): PRs to `develop` → **Squash and merge**; `develop` → `main` → **Create a merge commit** (squashing would make `main` and `develop` diverge). Remind the user of the method when handing over a PR.
+   - Branch rules (GitHub Rulesets) are set manually by the user. Do not change repository settings; point them to the "🔀 GitHub のブランチルール" section of the pineduck-workflow README instead.
 6. Do not merge PRs, close Issues, or push to `main` without the user's explicit instruction.
 7. **Never touch secret files** (`.dev.vars`, `.dev.vars.*`, `.env`, `.env.*`; `*.example` files are fine)
    - Do not read, create, edit, copy, `cat`, `grep`, or `ls` them, and never print secret values. A hook in `.claude/settings.json` blocks this.

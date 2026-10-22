@@ -28,6 +28,15 @@
 | `develop` | プレビュー確認用。作業ブランチはここへマージする |
 | `<type>/...` | 作業ブランチ。`develop` から作成する |
 
+## マージ方法
+
+| マージ先 | マージ方法 | 理由 |
+| --- | --- | --- |
+| `develop` | **Squash and merge** | 作業ブランチのコミットを 1 つにまとめ、「1 PR = 1 コミット」にする |
+| `main` | **Create a merge commit** | `develop` の履歴をそのまま取り込む。スカッシュすると `main` と `develop` の履歴が分かれ、次回以降のリリース PR で差分や競合が出る |
+
+可能であれば GitHub の Rulesets でブランチごとにマージ方法を固定してください (手順: [pineduck-workflow の README](https://github.com/pineduckjp/pineduck-workflow#-github-のブランチルール-最初の-1-回だけ手動))。
+
 ## 開発の流れ
 
 ### 1. Issue 作成（計画）
@@ -82,7 +91,7 @@ refactor!: API のレスポンス形式を変更
 
 1. PR 作成: `Issue #<issue-id>` を記載(Issue を作成していない場合は不要)
 2. レビュー・承認
-3. マージ
+3. マージ (**Squash and merge**)
 4. (設定している場合) プレビュー環境へ自動デプロイ
 
 PR 作成時に、テンプレートを使用してください。
@@ -102,7 +111,7 @@ PR にも **担当者・ラベル (`<type>`)・Milestone (Issue と同じもの)
 
 1. PR 作成(`develop` → `main`): `Closes #<issue-id>` を記載(Issue を作成していない場合は不要)
 2. レビュー・承認
-3. マージ
+3. マージ (**Create a merge commit**)
 4. (設定している場合) 本番環境へ自動デプロイ
 
 作業ブランチは、マージ後に削除してください。

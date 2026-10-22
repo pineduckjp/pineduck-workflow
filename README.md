@@ -18,14 +18,15 @@ GitHub の **Issue で計画を立て、PR で開発を進める** ための、P
 | 5 | 🤖 AI | `develop` から作業ブランチを作成し、実装・コミットする | ブランチ・コミット |
 | 6 | 🤖 AI | テスト・ビルドを確認し、`develop` 向けの PR を作成する (`Issue #N`、担当者・ラベル・Milestone を設定) | PR |
 | 7 | 👤 人 | PR をレビューする。修正があれば AI に指示 → 5 に戻る | レビュー |
-| 8 | 👤 人 | PR を `develop` にマージする | — |
+| 8 | 👤 人 | PR を `develop` に **Squash and merge** でマージする | — |
 | 9 | 👤 人 | プレビュー環境で動作確認する | — |
 | 10 | 👤 人 | 「本番リリースして」と AI に指示する | 指示文 |
 | 11 | 🤖 AI | `develop` → `main` の PR を作成する (`Closes #N`) | リリース PR |
-| 12 | 👤 人 | リリース PR をマージし、本番環境で動作確認する | Issue が自動でクローズ 🎉 |
+| 12 | 👤 人 | リリース PR を **Create a merge commit** でマージし、本番環境で動作確認する | Issue が自動でクローズ 🎉 |
 
 > **ポイント**
 > - AI は勝手に **マージ・Issue のクローズ・`main` への push をしません**。それは人の仕事です。
+> - マージ方法は **`develop` へは Squash and merge、`main` へは Create a merge commit** です (→ [🔀 GitHub のブランチルール](#-github-のブランチルール-最初の-1-回だけ手動))。
 > - AI は **シークレットファイル (`.dev.vars` / `.env` など) を見ない・触りません**。API キーなどの設定は、AI が手順を案内し、人が行います (→ [🔐 シークレットの扱い](#-シークレットの扱い))。
 > - `docs` / `refactor` / `config` など機能に関わらない変更は、Issue を作らずステップ 5 から始めて OK です。
 > - 迷ったら「今どのステップ？」と AI に聞けば、この表のどこにいるか答えてくれます。
@@ -84,6 +85,8 @@ git switch -c develop && git push -u origin develop
 gh api repos/{owner}/{repo}/milestones -f title="form-mail"
 ```
 
+5. GitHub のブランチルールを設定 (→ [🔀 GitHub のブランチルール](#-github-のブランチルール-最初の-1-回だけ手動))
+
 `install.sh` のオプション:
 
 | オプション | 説明 |
@@ -101,6 +104,60 @@ gh api repos/{owner}/{repo}/milestones -f title="form-mail"
 - `.github/pull_request_template.md` のチェックリスト (例: `npm run build` などの具体的なコマンド)
 - CI / デプロイの workflow (`develop` → プレビュー、`main` → 本番) はプロジェクトごとに作成
 
+## 🔀 GitHub のブランチルール (最初の 1 回だけ・手動)
+
+マージ方法を間違えないよう、GitHub の **Rulesets** でブランチごとにマージ方法を固定します。
+
+| マージ先 | マージ方法 | 理由 |
+| --- | --- | --- |
+| `develop` | **Squash and merge** | 作業ブランチの細かいコミットを 1 つにまとめ、`develop` の履歴を「1 PR = 1 コミット」にする |
+| `main` | **Create a merge commit** | `develop` のコミットをそのまま `main` に取り込む。スカッシュすると `main` と `develop` の履歴が分かれ、次回以降のリリース PR で差分や競合が出る |
+
+> Rulesets は **Public リポジトリ**、または **GitHub Pro / Team 以上** の Private リポジトリで使えます。無料プランの Private リポジトリでは使えないため、その場合は上の表のマージ方法を守って手動で運用してください (PR テンプレートにも記載しています)。
+
+### 1. マージ方法を許可する
+
+リポジトリの **Settings → General → Pull Requests**
+
+- ☑ **Allow merge commits**
+- ☑ **Allow squash merging** → Default commit message: **Pull request title** (PR タイトルがそのままコミットメッセージになる)
+- ☐ Allow rebase merging (使わないのでオフ)
+- (任意) ☑ Automatically delete head branches: マージ後に作業ブランチを自動で削除する。`develop` は下の Ruleset で削除を禁止するので消えません
+
+### 2. `develop` の Ruleset を作る
+
+**Settings → Rules → Rulesets → New ruleset → New branch ruleset**
+
+| 項目 | 設定 |
+| --- | --- |
+| Ruleset Name | `develop` |
+| Enforcement status | **Active** |
+| Target branches | Add target → Include by pattern → `develop` |
+| Restrict deletions | ☑ |
+| Block force pushes | ☑ |
+| Require a pull request before merging | ☑ (Required approvals は 1 人開発なら `0`) |
+| └ Allowed merge methods | **Squash** のみ |
+
+最後に **Create** を押します。
+
+### 3. `main` の Ruleset を作る
+
+手順 2 と同じ内容で、次の項目だけ変えます。
+
+| 項目 | 設定 |
+| --- | --- |
+| Ruleset Name | `main` |
+| Target branches | Add target → Include default branch (または Include by pattern → `main`) |
+| └ Allowed merge methods | **Merge** のみ |
+
+### 4. 確認
+
+- `develop` 向けの PR を開くと、マージボタンが **Squash and merge** だけになっている
+- `develop` → `main` の PR を開くと、マージボタンが **Create a merge commit** だけになっている
+- `main` / `develop` に直接 push しようとすると拒否される
+
+> CI (テストなど) を PR で実行している場合は、各 Ruleset で **Require status checks to pass** にそのジョブを追加すると、テストが通らない PR をマージできなくなります。
+
 ---
 
 ## 📚 ルール早見表
@@ -114,6 +171,8 @@ gh api repos/{owner}/{repo}/milestones -f title="form-mail"
 | `develop` 向け PR | 本文に `Issue #<番号>` (Issue は開いたまま) | `Issue #3` |
 | Issue / PR の属性 | 担当者 (自分)・ラベル (`<type>`)・Milestone を必ず設定 | `feat` / `form-mail` |
 | `main` 向け PR | 本文に `Closes #<番号>` (マージで自動クローズ) | `Closes #3` |
+| `develop` へのマージ方法 | **Squash and merge** (1 PR = 1 コミット) | — |
+| `main` へのマージ方法 | **Create a merge commit** (`develop` と履歴を揃える) | — |
 
 `<type>` の一覧: `feat` / `fix` / `docs` / `style` / `refactor` / `config` / `test` / `ci`
 
@@ -148,6 +207,7 @@ API キーなどのシークレットは **人だけが扱います**。AI は�
 
 1. 作業中のプロジェクトにワークフローが未導入 (`.github/ISSUE_TEMPLATE/feat.md` が無い、または `AGENTS.md` / `CLAUDE.md` に `Development Workflow (Issue + PR)` が無い) なら、導入を提案する。
    導入は、このリポジトリを clone して `install.sh <project-dir> --labels` を実行し、「導入後の設定」を行う。
+   GitHub のブランチルールは人が手動で設定するので、「🔀 GitHub のブランチルール」の手順を案内する。
 2. 開発の依頼であれば、[template/AGENTS.workflow.md](./template/AGENTS.workflow.md) の規約と、上の「毎回おこなうワークフロー」の表に従う。
    今どのステップにいるかを、ユーザーに伝えながら進める。
 

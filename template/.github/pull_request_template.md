@@ -35,6 +35,8 @@
 - ◉ `develop` (プレビュー確認用)
 - ○ `main` (本番リリース用)
 
+<!-- マージ方法: develop へは「Squash and merge」、main へは「Create a merge commit」 -->
+
 ## スクリーンショット（UI 変更の場合）
 
 <!-- スクリーンショットやビフォーアフターを追加 -->
