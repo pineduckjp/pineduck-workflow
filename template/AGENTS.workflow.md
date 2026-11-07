@@ -26,6 +26,7 @@ Source and human-facing step table: https://github.com/pineduckjp/pineduck-workf
    - `gh pr create --base develop --title "<type>: ..." --label <type> --milestone "<milestone>" --assignee @me --body-file <file>`
    - Always set **assignee (`@me`), label (= `<type>`), and milestone** (same as the Issue; omit `--milestone` only when there is no Issue) on both Issues and PRs. Verify with `gh pr view <n> --json assignees,labels,milestone`.
    - Check off completed tasks in the Issue: edit the body with `gh issue edit <id> --body-file <file>`.
+   - **PR checkboxes mean "done by merge time".** In the PR body, use checkboxes only for work that is finished when the PR is merged. Put anything not needed at merge time (pre-release checks, post-merge / post-deploy checks, future work, items waiting on the user) in the plain bulleted `今後のタスク (マージ時には不要)` section, without checkboxes, and keep those items in the Issue's tasks. Never leave a PR with permanently unchecked boxes.
 5. **Release PR `develop` → `main`** only when the user asks. Body contains `Closes #<id>`. Set assignee / label / milestone the same way.
    - Merge methods (the user merges): PRs to `develop` → **Squash and merge**; `develop` → `main` → **Create a merge commit** (squashing would make `main` and `develop` diverge). Remind the user of the method when handing over a PR.
    - Branch rules (GitHub Rulesets) are set manually by the user. Do not change repository settings; point them to the "🔀 GitHub のブランチルール" section of the pineduck-workflow README instead.
