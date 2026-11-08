@@ -45,6 +45,17 @@ copy_file .github/ISSUE_TEMPLATE/config.yml || true
 copy_file .github/pull_request_template.md || true
 copy_file CONTRIBUTING.md || true
 
+# シークレット混入の防止 (git フック + Claude Code のガード)
+copy_file .githooks/check-secrets.sh || true
+copy_file .githooks/pre-commit || true
+copy_file .githooks/pre-push || true
+copy_file .claude/hooks/guard-git.sh || true
+chmod +x "$target"/.githooks/* "$target/.claude/hooks/guard-git.sh" 2>/dev/null || true
+if git -C "$target" rev-parse --git-dir >/dev/null 2>&1; then
+  git -C "$target" config core.hooksPath .githooks
+  echo "config   core.hooksPath = .githooks (このクローンのみ。他のクローンでも同じコマンドを実行してください)"
+fi
+
 # シークレットファイル保護 (Claude Code の権限設定とフック)
 if ! copy_file .claude/settings.json; then
   echo "         → .claude/settings.json の permissions.deny と hooks.PreToolUse を手動でマージしてください"
@@ -92,3 +103,4 @@ fi
 echo
 echo "完了: $target"
 echo "次の手順は README.md の「導入後の設定」を参照してください。"
+echo "新しくクローンしたら: git config core.hooksPath .githooks"

@@ -35,6 +35,17 @@
             "statusMessage": "シークレットファイルへのアクセスを確認中"
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/guard-git.sh\"",
+            "onFailure": "block",
+            "statusMessage": "git 操作のシークレット混入を確認中"
+          }
+        ]
       }
     ]
   }
