@@ -104,6 +104,21 @@ gh api repos/{owner}/{repo}/milestones -f title="form-mail"
 - `.github/pull_request_template.md` のチェックリスト (例: `npm run build` などの具体的なコマンド)
 - CI / デプロイの workflow (`develop` → プレビュー、`main` → 本番) はプロジェクトごとに作成
 
+## 🛡️ シークレットの混入防止 (commit / push 時)
+
+環境変数ファイルや API キーを、うっかり Git に入れないための仕組みです。
+
+| 仕組み | 内容 |
+| --- | --- |
+| `.githooks/pre-commit` | ステージ済みの変更を検査する |
+| `.githooks/pre-push` | push するコミットを検査する (途中で追加して後で消したファイルも、履歴にあれば検出) |
+| `.githooks/check-secrets.sh` | 検査の本体。シークレットらしいファイル名 (`.env*`、`.dev.vars*`、秘密鍵など。`*.example` は除く)、API キーの形の文字列 (Resend、Supabase、GitHub、AWS など)、ローカルのシークレットファイルが `.gitignore` で無視されているか、を調べる |
+| `.claude/hooks/guard-git.sh` | Claude Code 用。`git add -A` / `git add .` / `git add -u` / `git commit -a` / `--no-verify` を止め、commit / push の前に検査を実行する |
+
+- `install.sh` が、これらをコピーし、`core.hooksPath` を `.githooks` に設定します。**新しくクローンしたときは、`git config core.hooksPath .githooks` を実行してください**
+- 検出されたら、該当のファイルを外すか `.gitignore` に追加します。すでに push した場合は、**先にキーを再発行**してください (履歴を消しても、すでに見られた可能性があるため)
+- 完全な防御ではありません。検査にかからない形のキーもあります。`git diff --cached` で中身を見る習慣を持ってください
+
 ## 🔀 GitHub のブランチルール (最初の 1 回だけ・手動)
 
 マージ方法を間違えないよう、GitHub の **Rulesets** でブランチごとにマージ方法を固定します。
@@ -224,7 +239,8 @@ template/                       ← 各プロジェクトにコピーされる�
 │   │   └── config.yml
 │   └── pull_request_template.md
 ├── .claude/
-│   └── settings.json           # シークレットファイルへのアクセス禁止 (権限設定 + フック)
+│   ├── settings.json           # シークレットファイルへのアクセス禁止 (権限設定 + フック)
+│   └── hooks/guard-git.sh      # git add -A などを止め、commit / push 前に混入を検査 (Claude Code 用)
 ├── CONTRIBUTING.md             # 人向けの詳しい開発フロー
 └── AGENTS.workflow.md          # AI 向けの規約 (AGENTS.md / CLAUDE.md に追記される)
 install.sh                      # 導入スクリプト
