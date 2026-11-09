@@ -17,9 +17,10 @@ mode="${1:-staged}"
 zero="0000000000000000000000000000000000000000"
 problems=()
 
-name_re='(^|/)(\.env(\.[^/]*)?|\.dev\.vars(\.[^/]*)?|id_rsa|id_ed25519|id_ecdsa|credentials\.json|service-account[^/]*\.json|[^/]*\.(pem|key|p12|pfx|keystore))$'
+name_re='(^|/)(\.wrangler/.*|\.env(\.[^/]*)?|\.dev\.vars(\.[^/]*)?|id_rsa|id_ed25519|id_ecdsa|credentials\.json|service-account[^/]*\.json|[^/]*\.(pem|key|p12|pfx|keystore))$'
 safe_re='\.(example|sample|template|dist)$'
-content_re='(re_[A-Za-z0-9]{20,}|sb_secret_[A-Za-z0-9_-]{16,}|sk-ant-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{32,}|gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|eyJ[A-Za-z0-9_-]{20,}\.eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|token|password|passwd)[A-Za-z0-9_]*[[:space:]]*[:=][[:space:]]*["'"'"']?[A-Za-z0-9/+_.-]{24,})'
+sq="'"
+content_re="(re_[A-Za-z0-9]{20,}|sb_secret_[A-Za-z0-9_-]{16,}|sk-ant-[A-Za-z0-9_-]{20,}|sk-[A-Za-z0-9]{32,}|gh[pousr]_[A-Za-z0-9]{30,}|github_pat_[A-Za-z0-9_]{30,}|AKIA[0-9A-Z]{16}|xox[baprs]-[A-Za-z0-9-]{10,}|eyJ[A-Za-z0-9_-]{20,}\.eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{10,}|-----BEGIN [A-Z ]*PRIVATE KEY-----|(api[_-]?key|secret|token|password|passwd)[A-Za-z0-9_]*[[:space:]]*[:=][[:space:]]*[\"${sq}][A-Za-z0-9/+_.-]{24,}[\"${sq}]|^\+?[A-Z][A-Z0-9_]*(KEY|SECRET|TOKEN|PASSWORD)[A-Z0-9_]*=[^[:space:]\"${sq}]{24,})"
 excludes=(-- . ':(exclude)*.example' ':(exclude)*.sample' ':(exclude)*.template')
 
 # 検査するコミットの範囲を、git log に渡す引数として作る
